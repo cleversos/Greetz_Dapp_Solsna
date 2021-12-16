@@ -1,18 +1,36 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import 'rc-color-picker/assets/index.css';
 import ColorPicker from 'rc-color-picker';
 import Picker from 'emoji-picker-react';
 import './App.scss';
 import $ from 'jquery';
 import { saveAs } from 'file-saver';
+
 /* ES6 */
 import * as htmlToImage from 'html-to-image';
 import { toPng, toJpeg, toBlob, toPixelData, toSvg } from 'html-to-image';
 import AWS from 'aws-sdk';
 
+import { useConnection, useWallet } from '@solana/wallet-adapter-react';
+import {
+    WalletMultiButton
+} from '@solana/wallet-adapter-react-ui';
+import { clusterApiUrl, Keypair, SystemProgram, Transaction } from '@solana/web3.js';
+
+import { mintNFT } from './utils/mintNFT';
+import { Creator, extendBorsh } from './utils/metaplex/metadata';
+import { PublicKey } from '@solana/web3.js';
+
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+
+// Default styles that can be overridden by your app
+require('@solana/wallet-adapter-react-ui/styles.css');
 
 function App() {
-
+  const { connection } = useConnection();
+  const { publicKey, wallet} = useWallet();
+  console.log(useWallet(), "walleteee")
   //color
   const [bgColor, setBgColor] = useState("#fff")
   const [textColor, setTextColor] = useState("#000")
@@ -155,13 +173,68 @@ function App() {
     $('.frame-block .frame').remove();
     $('.frame-block').append(elm);
   }
-  const submitFrame = () => {
+  const mint = useCallback(async () => {
+    console.log(publicKey, connection);
     let findValue = 1080 / ($('.frame-block').outerWidth());
     htmlToImage.toPng(document.getElementById('capture'), { pixelRatio: findValue })
-      .then(function (blob) {
-        window.saveAs(blob, 'greetz-card.png');
+      .then(async function (dataUrl) {
+        const res = await fetch(dataUrl);
+        const blob = await res.blob();
+        console.log(blob);
+        const imageFile = new File([blob], 'image.png', { type: 'image/png' });
+        extendBorsh();
+        const metadata = {
+          animation_url: undefined,
+          creators: [
+            new Creator({
+              // Page owner's cut
+              address: new PublicKey('6DP69M94Cez8xGiQ9DvxqpHMULEmGHLDiVXicwZcMwPK'),
+              verified: false,
+              share: 10,
+            }),
+            new Creator({
+              // Minter's cut
+              address: new PublicKey(publicKey.toString()),
+              verified: true,
+              share: 90,
+            }),
+          ],
+          description: 'GREETZ',
+          external_url: 'https://www.greetz.io',
+          image: imageFile.name,
+          name: 'Greetz Card',
+          symbol: '',
+          // Royalties
+          sellerFeeBasisPoints: 15,
+          attributes: [
+            {
+              trait_type: 'Text',
+              value: content,
+            },
+            {
+              trait_type: 'Background Color',
+              value: bgColor,
+            },
+            {
+              trait_type: 'Text Color',
+              value: textColor,
+            },
+          ],
+          collection: null,
+          properties: {
+            category: 'image',
+            files: [{ type: imageFile.type, uri: imageFile.name }],
+          },
+        };
+        try {
+          const result = await mintNFT(connection, wallet, [imageFile], metadata, recipient);
+        } catch (error) {
+          toast(error.message);
+          console.error(error);
+        }
       });
-  }
+  }, [publicKey, wallet, connection, bgColor, content, recipient, textColor]);
+
   const frameWidthHeight = () => {
     let elmbg = document.querySelector('.frame-block')
     let getBG = elmbg.style.backgroundColor;
@@ -198,12 +271,15 @@ function App() {
 
   return (
     <div style={{ backgroundImage: `url('./body-bg.jpg')`, backgroundSize: 'cover' }}>
+      <ToastContainer/>
       <header>
         <div className="d-flex h-100 align-items-center container">
           <a href="/" className="logo">
             <img src={'./logo.png'} alt="Greetz" />
           </a>
-          <a className="ml-auto connect-wallet">Connect Wallet</a>
+          <div className="ml-auto">
+            <WalletMultiButton/>
+          </div>
         </div>
       </header>
       <main className="h-100 p-15 d-flex-tablet main">
@@ -291,7 +367,7 @@ function App() {
             </div>
             <div className="mt-auto d-flex align-items-center price-block">
               <div className="price-label ml-auto">Price: 0.05 $SOL</div>
-              <button onClick={submitFrame} className="btn-mint">MINT</button>
+              <button onClick={mint} className="btn-mint">MINT</button>
             </div>
           </div>
         </div>
