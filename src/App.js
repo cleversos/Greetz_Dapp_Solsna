@@ -116,6 +116,27 @@ function App() {
     //let content = target.value.replace(/\r\n|\r|\n/g, "<br />")
     $('.frame-content .pre-content').html(target.value);
   };
+
+  const signChange = (target) => {
+    //let content = target.value.replace(/\r\n|\r|\n/g, "<br />")
+    console.log(target);
+    if(target.target.files.length == 0)
+      $('.frame-content .sign-content').html("");
+    else {
+      const reader = new FileReader();
+      const file = target.target.files[0];
+
+      reader.addEventListener("load", function () {
+        // convert image file to base64 string
+        $('.frame-content .sign-content').html("<image style='width:100%; height:100%; object-fit: cover;' src='" + reader.result + "'></image>");
+      }, false);
+    
+      if (file) {
+        reader.readAsDataURL(file);
+      }
+    }
+  };
+
   const updateRecipient = (event) => {
     setRecipient(event.target.value)
   }
@@ -138,7 +159,7 @@ function App() {
       } else {
         let imgs = [];
         data.Contents.map(function (item, i) {
-          imgs.push({ imagePath: 'https://assets-greetz.s3.us-west-1.amazonaws.com/' + item['Key'] })
+          imgs.push({ imagePath: 'https://d1b245q87ffzvi.cloudfront.net/' + item['Key'] })
         });
         setFrameArray(d => [...d, ...imgs]);
       }
@@ -239,9 +260,9 @@ function App() {
     let elmbg = document.querySelector('.frame-block')
     let getBG = elmbg.style.backgroundColor;
     $('.frame-block').removeAttr("style").css('background-color', getBG);
-    $('.right-panel').removeAttr("style");
+    //$('.middle-panel').removeAttr("style");
 
-    let balnceHeight = $(window).height() - ($('header').height() + $('.block-recipient-price').height());
+    let balnceHeight = $(window).height() - ($('header').height() + $('footer').height());
     if ($(window).width() > 900) {
       balnceHeight = balnceHeight - 45;
     }
@@ -254,7 +275,7 @@ function App() {
     }
     if ($(window).width() > 900) {
       $('.frame-block').height(finalWidthHeight).width(finalWidthHeight)
-      $('.right-panel').width($('.frame-block').outerWidth())
+      //$('.middle-panel').width($('.frame-block').outerWidth())
     } else {
       $('.frame-block').height($('.frame-block').width())
     }
@@ -270,10 +291,10 @@ function App() {
 
 
   return (
-    <div style={{ backgroundImage: `url('./body-bg.jpg')`, backgroundSize: 'cover' }}>
+    <div style={{ backgroundImage: `url('./header-bg.png')`, backgroundRepeat: 'no-repeat', backgroundColor: '#ECF1F5', backgroundSize: '100% auto' }}>
       <ToastContainer/>
       <header>
-        <div className="d-flex h-100 align-items-center container">
+        <div className="d-flex h-100 align-items-start container">
           <a href="/" className="logo">
             <img src={'./logo.png'} alt="Greetz" />
           </a>
@@ -285,7 +306,7 @@ function App() {
       <main className="h-100 p-15 d-flex-tablet main">
 
         <div className="d-flex flex-direction-column left-panel">
-          <div className="frame-listing">
+          <div className="d-flex flex-wrap-wrap  frame-listing">
             {
               frameArray.map((item, index) => {
                 return (
@@ -303,10 +324,22 @@ function App() {
               })
             }
           </div>
-          <div className="mt-auto d-flex align-items-center color-picker-block">
-            <div className="d-flex align-items-center col-color col-background">
+        </div>
+        <div className="d-flex flex-direction-column middle-panel">
+          <div className="">
+          <div className="frame-block" id="capture" style={{ backgroundColor: bgColor }}>
+            <div className="frame-content">
+              <pre style={{ fontFamily: fontName, color: textColor, fontSize: fontSize }} className="pre-content">{content}</pre>
+              <div className="sign-content"></div>
+            </div>
+          </div>
+        </div>
+        </div>
+        <div className="d-flex flex-direction-column right-panel">
+          <div className="d-flex align-items-center color-picker-block">
+            <div className="d-flex flex-direction-column col-color col-background">
               <div className="color background">Background</div>
-              <div className="color text pl-10 mt-5">
+              <div className="color text  mt-5">
                 <ColorPicker
                   animation="slide-up"
                   color={bgColor}
@@ -314,9 +347,9 @@ function App() {
                 />
               </div>
             </div>
-            <div className="d-flex align-items-center col-color">
+            <div className="d-flex flex-direction-column col-color">
               <div className="color background">Text</div>
-              <div className="color text pl-10 mt-5">
+              <div className="color text  mt-5">
                 <ColorPicker
                   animation="slide-up"
                   color={textColor}
@@ -325,19 +358,19 @@ function App() {
               </div>
             </div>
           </div>
-          <div className="d-flex font-update-block">
-            <div className="d-flex font-name">
-              <div>Font name</div>
-              <div className="pl-10"><select value={fontName} onChange={fontNameUpdate}>
+          <div className="d-flex font-update-block mb-15">
+            <div className="d-flex flex-direction-column pr-15">
+              <div className="font-name-label">Font</div>
+              <div className="font-name mt-5"><select value={fontName} onChange={fontNameUpdate}>
                 {fontFamilyArray.map((item, i) =>
                   <option key={i} value={item.value}>{item.fontFamily}</option>
                 )}
               </select></div>
             </div>
 
-            <div className="d-flex font-size">
-              <div className="">Font size</div>
-              <div className="pl-10"><select value={fontSize} onChange={fontSizeUpdate}>
+            <div className="d-flex flex-direction-column">
+              <div className="font-size-label">Font size</div>
+              <div className="font-size mt-5"><select value={fontSize} onChange={fontSizeUpdate}>
                 {fontSizeArray.map((item, i) =>
                   <option key={i} value={item.value}>{item.fontSize}</option>
                 )}
@@ -354,15 +387,16 @@ function App() {
               </div>
 
             </div>
-            <textarea name="textarea" placeholder="Type here" value={content} onChange={(e) => { contentChange(e.target) }}></textarea>
-          </div>
-        </div>
-        <div className="d-flex flex-direction-column right-panel">
-          <div className="frame-block" id="capture" style={{ backgroundColor: bgColor }}>
-            <div className="frame-content"><pre style={{ fontFamily: fontName, color: textColor, fontSize: fontSize }} className="pre-content">{content}</pre></div>
+            <div className="message-label">Message</div>
+            <textarea name="textarea" className="mt-5" placeholder="Type here" value={content} onChange={(e) => { contentChange(e.target) }}></textarea>
+            <p className="upload-image-block">Sign with an image (optional)
+            <label for="files" class="btn-upload">Upload</label>
+            <input id="files" style={{visibility:"hidden"}} type="file" onChange={(e) => { signChange(e)}}/> 
+            </p>
           </div>
           <div className="mt-auto block-recipient-price">
-            <div className="recipient-block mb-15">
+            <div className="recipient-label">Wallet Address</div>
+            <div className="recipient-block mb-15 mt-5">
               <input value={recipient || ''} onChange={updateRecipient} className="recipient-input" placeholder="Recipient Wallet Address" />
             </div>
             <div className="mt-auto d-flex align-items-center price-block">
@@ -372,6 +406,14 @@ function App() {
           </div>
         </div>
       </main>
+      <footer className="d-flex align-items-center" style={{ backgroundImage: "url('footer-bg.png')" }}>
+        <a href="/" className="footer-logo">
+          <img src={'./logo.png'} alt="Greetz" />
+        </a>
+        <a href="" className="ico-twitter">
+          <img src={'twitter-logo.svg'} alt="Twitter" />
+        </a>
+      </footer>
     </div>
   );
 }

@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Baloo+Bhaijaan+2:wght@800&family=Fira+Sans:wght@800&family=Lobster&family=Pacifico&family=Permanent+Marker&family=Roboto:wght@400;900&family=Rubik:wght@900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Baloo+Bhaijaan+2:wght@800&family=Fira+Sans:wght@800&family=Lobster&family=Pacifico&family=Permanent+Marker&family=Roboto:wght@400;500;900&family=Rubik:wght@900&display=swap');
 // font-family: 'Baloo Bhaijaan 2', cursive;
 // font-family: 'Fira Sans', sans-serif;
 // font-family: 'Lobster', cursive;
@@ -8,21 +8,25 @@
 // font-family: 'Rubik', sans-serif;
 $green : green;
 $blue: blue;
-$primary: $blue;
-$secondary: $green;
+$pink : #FF00FF;
+$primary: $pink;
 $basecolor : #09d8e4;
 
 :root {
-  --header-height: 70px;
+  --header-height: 120px;
   --header-height-mobile: 50px;
+  --footer-height:50px;
 }
-$headerHeight : 70px;
+$headerHeight : 120px;
 $headerHeightMobile : 50px;
+$footerHeight : 50px;
 
 $mobileMax : 600px;
 $tablet : 601px;
 $laptop : 901px;
 $desktop : 1100px;
+
+
 html,body,*{
   margin:0;
   padding:0;
@@ -42,6 +46,9 @@ html,body,*{
 .align-items-center{
   align-items: center;
 }
+.align-items-start{
+  align-items: flex-start;
+}
 .justify-content-center{
   justify-content: center;
 }
@@ -50,6 +57,12 @@ html,body,*{
 }
 .justify-content-end{
   justify-content: flex-end;
+}
+.justify-content-space-between{
+  justify-content: space-between;
+}
+.flex-wrap-wrap{
+  flex-wrap: wrap;
 }
 .h-100{
   height:100%;
@@ -84,6 +97,15 @@ html,body,*{
 .mb-15{
   margin-bottom:15px;
 }
+select, textarea, input{
+  border:1px solid #DADFE3;
+  background:#fff;
+  color:#094566;
+  outline: none;
+  &:focus{
+    box-shadow:0 0px 2px rgba(0,0,0,0.2);
+  }
+}
  button{
    outline:none;
    border:1px solid transparent;
@@ -105,9 +127,7 @@ html,body,*{
 }
 header{
   height:$headerHeightMobile;
-  // background:url('/images/header-bg.jpg');
-  // background-size:100%;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  align-items: flex-start;
   @media only screen and (min-width: $laptop) {
     height:$headerHeight;
   }
@@ -115,17 +135,18 @@ header{
 main{
   min-height:calc(100vh - var(--header-height-mobile)); 
   @media only screen and (min-width: $laptop) {
-    min-height:calc(100vh - var(--header-height)); 
+    min-height:calc(100vh - var(--header-height) - var(--footer-height)  ); 
+    justify-content: space-between;
   }
 }
 .logo{
   font-size:20px;
   font-weight:bold;
-  color:$secondary;
+  color:$primary;
   display:inline-block;
   img{
-    margin-top:2px;
-    max-width:80px;
+    margin-top:5px;
+    max-width:120px;
     display: block;
     @media only screen and (min-width: $laptop) {
       max-width:180px;
@@ -134,28 +155,72 @@ main{
 }
 .connect-wallet{
   color:$primary;
+  color: #fff;
   padding:10px 15px;
-  background:rgba(255,255,255,0.9);
+  background:$primary;
+  border-radius:5px;
+  font-weight:500;
+  cursor: pointer;
+  margin-top: 13px;
+}
+
+.left-panel{
+  @media only screen and (min-width: $laptop) {
+    height:calc(100vh - var(--header-height) - var(--footer-height)  ); 
+  }
+}
+.middle-panel{
+  @media only screen and (min-width: $laptop) {
+    padding:0 15px;
+  }
+}
+.right-panel{
+  @media only screen and (min-width: $laptop) {
+    width: 300px;
+  } 
+  @media only screen and (min-width: $desktop) {
+    width: 380px;
+  } 
 }
 
 .frame-listing{
   max-width:100%;
   overflow: hidden;
-  overflow-x: auto;
+  overflow-y: auto;
   white-space: nowrap;
-  border:1px solid black;
-  margin-bottom:20px;
+  height:50vh;
+  justify-content: center;
+  margin-bottom:15px;
+  @media only screen and (min-width: $tablet) {  
+    height:100%;
+    justify-content: start;
+  }
   @media only screen and (min-width: $laptop) {
-     margin-bottom:40px;
+    width:180px;
+  }
+  @media only screen and (min-width: 1000px) {
+    width:290px;
+    margin-bottom: 0;
+  }
+  @media only screen and (min-width: $desktop) {
+    width:380px;
   }
 }
+
 .frame-listing-block{
-  width:200px;
-  height:200px;
+  width:120px;
+  height:120px;
+  margin-bottom:7px;
+  margin-right:7px;
+  margin-left:7px;
   background:#fff;
   display:inline-block;
-  margin:5px;
+  //margin:5px;
   border:1px solid gray;
+  @media only screen and (min-width: $desktop) {
+    width:160px;
+    height:160px;
+  }
   .frame{
     width:100%;
     height:100%;
@@ -174,32 +239,41 @@ main{
     }
   }
 }
-.left-panel{
-  width:100%;
-  @media only screen and (min-width: $laptop) {
-    width:60%;
-    padding-right:15px;
-    //flex:1 1 auto!important;
-    flex-grow:1!important;
+
+@media only screen and (min-width: 1100px) {
+.frame-listing-block{
+    &:nth-child(2n){
+      margin-left:0;
+      margin-right:7px;
+    }
   }
 }
-.right-panel{
-  width:100%;
-  @media only screen and (min-width: $laptop) {
-    width:40%;
-  }
-}
+ 
 
 .frame-block{
   width:100%;
   height:400px;
-  border:1px solid #000;
+  //border:4px solid #fff;
   max-width:100%;
-  position: relative;
+  position: relative; 
   margin-bottom:15px;
+  border-radius:2px;
   @media only screen and (min-width: $laptop) {
-    margin-bottom:0;
+    width:300px;
+    height:300px;
   }
+  @media only screen and (min-width: $desktop) {
+    margin-bottom:0;
+    width:480px;
+    height:480px;
+    margin-left: auto;
+    margin-right:auto;
+  }
+//   $mobileMax : 600px;
+// $tablet : 601px;
+// $laptop : 901px;
+// $desktop : 1100px;
+
   .frame{
     width:100%;
     height:100%;
@@ -224,6 +298,16 @@ main{
       overflow: hidden;
       white-space: pre-wrap;
     }
+    .sign-content{
+      width:25%;
+      height:25%;
+      position: relative;
+      left:37.5%;
+      bottom:25%;
+      overflow: hidden;
+      z-index: 2;
+      white-space: pre-wrap;
+    }
   }
   @media only screen and (min-width: $laptop) {
     // width:800px;
@@ -233,6 +317,20 @@ main{
 
 .color-picker-block{
   margin-bottom:15px;
+  .color{
+    color:#094566;
+    font-weight:500;
+  }
+  .rc-color-picker-wrap {
+    width:36px;
+    height:36px;
+    border-radius:3px;
+    span{
+      width:36px;
+      height:36px;
+      border:3px solid #fff;
+    }
+  }
 }
 .col-background{
   margin-right:30px;
@@ -243,26 +341,49 @@ main{
 
 .font-update-block{
   //margin-bottom:15px;
+  .font-name-label, .font-size-label{
+    font-weight:500;
+    color:#094566;
+  }
+  select{
+    border:1px solid #DADFE3;
+    background:#fff;
+    color:#094566;
+    height:36px;
+    font-weight:500;
+    border-radius:3px;
+    padding:0 10px;
+  }
+  select { 
+    -webkit-appearance: none; -moz-appearance: none; appearance: none; padding-right: 24px; 
+    background: url('data:image/svg+xml;utf-8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"><path d="M7 10l5 5 5-5z"/><path d="M0 0h24v24H0z" fill="none" /></svg>') 100% 50% no-repeat #fff; } /* change or remove #fff color if not needed */
 }
-.font-name{
+.font{
   margin-right: 30px;
+
 };
 
 .textarea-block{
   margin-bottom:15px;
+  position: relative;
   @media only screen and (min-width: $laptop) {
     margin-bottom:0;
+}
+.message-label{
+  font-weight:500;
+  color:#094566;
 }
   textarea{
     width:100%;
     max-width:100%;
-    border:1px solid #000;
     padding:15px;
     border-radius:4px;
-    height:150px;
+    height:100px;
   }
   .emoji-block{
-    position: relative;
+    position: absolute;
+    right:0;
+    top:-20px;
       .emoji-toggle{
         font-size:26px;
         padding:2px;
@@ -300,13 +421,16 @@ main{
 .recipient-block{
   .recipient-input{
     width:100%;
-    border:1px solid #000;
     padding:15px;
     border-radius:4px;
     height:50px;
   }
 }
 .price-block{
+  margin-bottom: 40px;
+  @media only screen and (min-width: $tablet) {
+    margin-bottom:15px;
+  }
   button{
     background:$basecolor;
     padding:15px 25px;
@@ -323,4 +447,64 @@ main{
 .rc-color-picker-wrap{
   background-image: url('/images/transparent.png');
   height:20px;
+}
+.recipient-label{
+  font-weight:500;
+  color:#094566;
+}
+.price-label{
+  font-weight:500;
+  color:#094566;
+  font-size:16px;
+}
+
+footer{
+  //display: none;
+  position: fixed;
+  bottom:0;
+  left: 0;
+  right:0;
+  background-repeat: no-repeat;
+  background-size:cover;
+  width:100%;
+  height: $footerHeight;
+  padding-left:15px;
+  padding-right:15px;
+  a{
+    margin-top: 10px;
+  }
+}
+.footer-logo{
+  margin-right:15px;
+  img{
+    max-width:90px;
+  }
+}
+
+.upload-image-block{
+  margin-top: 10px;
+  margin-bottom:10px;
+  display:flex;
+  align-items: center;
+  justify-content: space-between;
+  font-weight:500;
+  color:#094566;
+  input{
+    position: absolute;
+  }
+  .btn-upload{
+    border:2px solid #094566;
+    padding:4px 15px;
+    border-radius:15px;
+    font-weight:500;
+    cursor: pointer;
+    transition: all 0.3 linear;
+    &:hover{
+      box-shadow: 0 2px 3px rgba(0,0,0,0.5);
+    }
+  }
+}
+
+.wallet-adapter-button{
+  margin: 10px 5px 0px ; 
 }
