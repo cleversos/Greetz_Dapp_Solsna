@@ -415,7 +415,7 @@ function App() {
         <a href="/" className="footer-logo">
           <img src={'./logo.png'} alt="Greetz" />
         </a>
-        <a href="" className="ico-twitter">
+        <a href="twitter.com/greetz_io" className="ico-twitter">
           <img src={'twitter-logo.svg'} alt="Twitter" />
         </a>
       </footer>
