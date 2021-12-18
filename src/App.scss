@@ -231,6 +231,7 @@ main{
     position: relative;
     &:after{
       content:'No frame';
+      pointer-events: none;
       position: absolute;
       width:100%;
       top:48%;

@@ -5,6 +5,7 @@ import Picker from 'emoji-picker-react';
 import './App.scss';
 import $ from 'jquery';
 import { saveAs } from 'file-saver';
+import { v4 as uuidv4 } from 'uuid';
 
 /* ES6 */
 import * as htmlToImage from 'html-to-image';
@@ -239,6 +240,10 @@ function App() {
             {
               trait_type: 'Text Color',
               value: textColor,
+            },
+            {
+              trait_type: 'Token ID',
+              value: uuidv4(),
             },
           ],
           collection: null,
