@@ -19,11 +19,12 @@ import { clusterApiUrl, Keypair, SystemProgram, Transaction } from '@solana/web3
 
 function GreetzApp() {
   // Can be set to 'devnet', 'testnet', or 'mainnet-beta'
-  const network = WalletAdapterNetwork.Devnet;
+  const network = WalletAdapterNetwork.Mainnet;
 
   // You can also provide a custom RPC endpoint
   const endpoint = useMemo(() => clusterApiUrl(network), [network]);
 
+  console.log(endpoint);
   // @solana/wallet-adapter-wallets includes all the adapters but supports tree shaking --
   // Only the wallets you configure here will be compiled into your application
   const wallets = useMemo(() => [
@@ -37,7 +38,6 @@ function GreetzApp() {
   ], [network]);
 
   return (
-    <React.StrictMode>
       <ConnectionProvider endpoint={endpoint}>
         <WalletProvider wallets={wallets} autoConnect>
           <WalletModalProvider>
@@ -45,12 +45,13 @@ function GreetzApp() {
           </WalletModalProvider>
         </WalletProvider>
       </ConnectionProvider>
-    </React.StrictMode>
   );
 }
 ReactDOM.render(
-  <GreetzApp/>,
-  document.getElementById('root')
+  <React.StrictMode>
+    <GreetzApp/>
+  </React.StrictMode>,
+    document.getElementById('root')
 );
 
 // If you want to start measuring performance in your app, pass a function
