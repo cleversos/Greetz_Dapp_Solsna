@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
+import { ethers } from 'ethers'
 import 'rc-color-picker/assets/index.css';
 import ColorPicker from 'rc-color-picker';
 import Picker from 'emoji-picker-react';
@@ -6,6 +7,11 @@ import './App.scss';
 import $ from 'jquery';
 import { saveAs } from 'file-saver';
 import { v4 as uuidv4 } from 'uuid';
+import Modal from './components/Modal'
+
+import Toggle from 'react-toggle'
+import "react-toggle/style.css"
+import "./custom.css"
 
 /* ES6 */
 import * as htmlToImage from 'html-to-image';
@@ -24,14 +30,39 @@ import { PublicKey } from '@solana/web3.js';
 
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import myEpicNft from './utils/MyEpicNFT.json'
+
+import { create as ipfsHttpClient } from 'ipfs-http-client';
 
 // Default styles that can be overridden by your app
 require('@solana/wallet-adapter-react-ui/styles.css');
 
+const CONTRACT_ADDRESS = "0x6c524712c257C2530A41036e20463636a5f61FCD";
+
+const InfoMsg = ({ toastProps }) => (
+  <p>
+    <b>2 Approvals</b> are needed to mint & send - please wait on this page for 30 seconds.
+  </p>
+)
+
+const EthereumIcon = () => (
+  <img className='ethereum-icon' src='./ethereum.png'/>
+)
+
+const SolanaIcon = () => (
+  <img className='solana-icon' src='./solana.png'/>
+)
+
 function App() {
+  const [currentAccount, setCurrentAccount] = useState("")
   const { connection } = useConnection();
   const { publicKey, wallet} = useWallet();
-  console.log(useWallet(), "walleteee")
+  //network selection
+  const [isEthereum, setIsEthereum] = useState(false);
+  
+  //ethereum info
+  const [ethereumWalletAccount, setEthereumWalletAccount] = useState(null);
+
   //color
   const [bgColor, setBgColor] = useState("#fff")
   const [textColor, setTextColor] = useState("#000")
@@ -47,6 +78,95 @@ function App() {
   const [cursorPos, setCursorPos] = useState(null);
   // images frame array
   const [frameArray, setFrameArray] = useState([]);
+  const [miningAnimation, setMiningAnimation] = useState(false)
+
+  const connectWallet = async () => {
+    try {
+      if(ethereumWalletAccount != null){
+        setEthereumWalletAccount(null);
+        return;
+      }
+
+      const { ethereum } = window;
+
+      if (!ethereum) {
+        setEthereumWalletAccount(null);
+        alert("Get Metamask!");
+        return;
+      }
+
+      const accounts = await ethereum.request({ method: "eth_requestAccounts" });
+
+      console.log("Connected", accounts[0])
+      setCurrentAccount(accounts[0])
+      setupEventListener()
+    } catch (error) {
+      console.log(error)
+    }
+  }
+
+  const setupEventListener = async () => {
+    try {
+      const { ethereum } = window;
+
+      if (ethereum) {
+        const provider = new ethers.providers.Web3Provider(ethereum);
+        const signer = provider.getSigner();
+        setEthereumWalletAccount(provider.provider.selectedAddress);
+        const connectedContract = new ethers.Contract(CONTRACT_ADDRESS, myEpicNft.abi, signer);
+
+        connectedContract.on("NewNFTMinted", (from, tokenId) => {
+          console.log(from, tokenId.toNumber())
+        })
+        console.log("Setup event listener!")
+      } else {
+        console.log("Ethereum object doesn't exist")
+        setEthereumWalletAccount(null);
+      }
+    } catch (error) {
+      console.log(error)
+      setEthereumWalletAccount(null);
+    }
+  }
+
+  const askContractToMintNft = async (metadataUrl) => {
+      try {
+        const { ethereum } = window;
+
+        if (ethereum) {
+          const provider = new ethers.providers.Web3Provider(ethereum);
+          const signer = provider.getSigner()
+          const connectedContract = new ethers.Contract(CONTRACT_ADDRESS, myEpicNft.abi, signer)
+
+          // console.log("Going to pop wallet now to pay gas...")
+          let nftTxn = await connectedContract.mint(metadataUrl);
+
+          // console.log("Mining... please wait")
+          await nftTxn.wait()
+          console.log(nftTxn)
+          console.log(`Mined, tee transaction: https://rinkeby.etherscan.io/tx/${nftTxn.hash}`)
+        } else {
+          console.log("Ethereum object doesn't exist")
+        }
+      } catch (error) {
+        console.log(error)
+        toast(error.message);
+        setMiningAnimation(false);
+      }
+  }
+
+  const renderConnectButton = () => (
+    <button onClick={connectWallet} className="ethereum-adapter-button ethereum-adapter-button-trigger">
+      { ethereumWalletAccount == null ? 'Select Wallet' : ethereumWalletAccount.toString().substring(0,10) + '...'}
+    </button>
+  );
+  
+  const renderMintUI = () => (
+    <button onClick={askContractToMintNft} className="mint-button">
+      Mint NFT
+    </button>
+  )
+  
   //image toggle
   const emojiShowToggle = () => {
     setIsEmojiActive(!isEmojiActive)
@@ -195,7 +315,100 @@ function App() {
     $('.frame-block .frame').remove();
     $('.frame-block').append(elm);
   }
-  const mint = useCallback(async () => {
+
+  /* Create an instance of the client */
+  const ipfsUploadClient = ipfsHttpClient('https://ipfs.infura.io:5001/api/v0')
+
+  const mint = async () => {
+    setMiningAnimation(true);
+    if(isEthereum)
+    {
+      await mintEthNFT();
+    }
+    else{
+      await mintSolNFT();
+    }
+  }
+
+  const mintEthNFT = useCallback(async () => {
+    console.log(ethereumWalletAccount)
+    if(ethereumWalletAccount == null){
+      toast.warn("Please connect your wallet!",{
+        autoClose: 10000,
+      });
+      setMiningAnimation(false);
+      return;
+    }
+    let findValue = 1080 / ($('.frame-block').outerWidth());
+    htmlToImage.toPng(document.getElementById('capture'), { pixelRatio: findValue })
+      .then(async function (dataUrl) {
+        console.log(dataUrl);
+        toast("Prepaing Image...");
+
+        var res = null;
+        try{
+          res = await fetch(dataUrl);
+        } catch (error) {
+          console.error(error);
+          toast(error.message);
+          setMiningAnimation(false);
+          return;
+        }
+        const blob = await res.blob();
+        const imageFile = new File([blob], 'image.png', { type: 'image/png' });
+
+        toast("Uploading Image...");
+
+        /* upload the file */
+        const imageUrl = await ipfsUploadClient.add(imageFile);
+
+        const attributes = {
+          name: 'Greetz',
+          attributes: [
+            {
+              trait_type: 'Text',
+              value: content,
+            },
+            {
+              trait_type: 'Background Color',
+              value: bgColor,
+            },
+            {
+              trait_type: 'Text Color',
+              value: textColor,
+            },
+            {
+              trait_type: 'Token ID',
+              value: uuidv4(),
+            },
+          ],
+          image: 'https://ipfs.infura.io/ipfs/' + imageUrl.path,
+        };
+
+        const strAttributes = JSON.stringify(attributes);
+        const blobAttributes = new Blob([strAttributes], { type: 'application/json' });
+        const attributeFile = new File([ blobAttributes ], 'attributes.json', { type: 'text/json' });
+        toast("Uploading Metadata...");
+        const metadataUrl = await ipfsUploadClient.add(attributeFile);
+
+        toast("Minting Started...");
+        await askContractToMintNft('https://ipfs.infura.io/ipfs/' + metadataUrl.path);
+        toast("NFT minted...");
+        setMiningAnimation(false);
+      });
+  }, [ethereumWalletAccount, bgColor, content, recipient, textColor]);
+
+  const mintSolNFT = useCallback(async () => {
+    if(publicKey == null)
+    {
+      toast.warn("Please connect your wallet!",{
+        autoClose: 10000,
+      });
+      return;
+    }
+    // toast.info(<InfoMsg/>,{
+    //   autoClose: 30000,
+    // });
     console.log(publicKey, connection);
     let findValue = 1080 / ($('.frame-block').outerWidth());
     htmlToImage.toPng(document.getElementById('capture'), { pixelRatio: findValue })
@@ -255,9 +468,10 @@ function App() {
         try {
           const result = await mintNFT(connection, wallet, [imageFile], metadata, recipient);
         } catch (error) {
-          toast(error.message);
           console.error(error);
+          setMiningAnimation(false);
         }
+        setMiningAnimation(false);
       });
   }, [publicKey, wallet, connection, bgColor, content, recipient, textColor]);
 
@@ -285,6 +499,11 @@ function App() {
       $('.frame-block').height($('.frame-block').width())
     }
   }
+
+  const networkToggle = () => {
+    setIsEthereum(!isEthereum);
+  }
+
   $(window).resize(function () {
     clearTimeout(this.id);
     this.id = setTimeout(frameWidthHeight(), 1000);
@@ -296,129 +515,154 @@ function App() {
 
 
   return (
-    <div style={{ backgroundImage: `url('./header-bg.png')`, backgroundRepeat: 'no-repeat', backgroundColor: '#ECF1F5', backgroundSize: '100% auto' }}>
-      <ToastContainer/>
-      <header>
-        <div className="d-flex h-100 align-items-start container">
-          <a href="/" className="logo">
+    <div>
+      {
+        miningAnimation ? (
+          <Modal />
+        ) : null
+      }
+      <div style={{ backgroundImage: `url('./header-bg.png')`, backgroundRepeat: 'no-repeat', backgroundColor: '#ECF1F5', backgroundSize: '100% auto' }}>
+        <ToastContainer/>
+        <header>
+          <div className="d-flex h-100 align-items-start container">
+            <a href="/" className="logo">
+              <img src={'./logo.png'} alt="Greetz" />
+            </a>
+            <div className="top-bar-container">
+              <div className="top-bar-control">
+                <div className="react-toggle-wrapper">
+                  <Toggle
+                    defaultChecked={true}
+                    icons={{
+                      checked: <SolanaIcon/>,
+                      unchecked: <EthereumIcon/>,
+                    }}
+                    onChange={networkToggle}
+                  />
+                </div>
+              </div>
+              { isEthereum ? 
+                (<div className="top-bar-control">
+                  { renderConnectButton() }
+                </div>) : 
+                (<div className="top-bar-control">
+                  <WalletMultiButton/>
+                </div>)
+              }
+            </div>
+          </div>
+        </header>
+        <main className="h-100 p-15 d-flex-tablet main">
+          <div className="d-flex flex-direction-column left-panel">
+            <div className="d-flex flex-wrap-wrap  frame-listing">
+              {
+                frameArray.map((item, index) => {
+                  return (
+                    <div key={index} className="frame-listing-block" onClick={(e) => frameSet(e)}>
+                      { index === 0 ? (
+                        <div className="frame" style={{ backgroundImage: "none" }}>
+                        </div>
+                      ) : (
+                          <div className="frame" style={{ backgroundImage: "url(" + item.imagePath + ")" }}>
+                          </div>
+                        )}
+
+                    </div>
+                  )
+                })
+              }
+            </div>
+          </div>
+          <div className="d-flex flex-direction-column middle-panel">
+            <div className="">
+            <div className="frame-block" id="capture" style={{ backgroundColor: bgColor }}>
+              <div className="frame-content">
+                <pre style={{ fontFamily: fontName, color: textColor, fontSize: fontSize }} className="pre-content">{content}</pre>
+                <div className="sign-content"></div>
+              </div>
+            </div>
+          </div>
+          </div>
+          <div className="d-flex flex-direction-column right-panel">
+            <div className="d-flex align-items-center color-picker-block">
+              <div className="d-flex flex-direction-column col-color col-background">
+                <div className="color background">Background</div>
+                <div className="color text  mt-5">
+                  <ColorPicker
+                    animation="slide-up"
+                    color={bgColor}
+                    onChange={bgColorUpdate}
+                  />
+                </div>
+              </div>
+              <div className="d-flex flex-direction-column col-color">
+                <div className="color background">Text</div>
+                <div className="color text  mt-5">
+                  <ColorPicker
+                    animation="slide-up"
+                    color={textColor}
+                    onChange={textColorUpdate}
+                  />
+                </div>
+              </div>
+            </div>
+            <div className="d-flex font-update-block mb-15">
+              <div className="d-flex flex-direction-column pr-15">
+                <div className="font-name-label">Font</div>
+                <div className="font-name mt-5"><select value={fontName} onChange={fontNameUpdate}>
+                  {fontFamilyArray.map((item, i) =>
+                    <option key={i} value={item.value}>{item.fontFamily}</option>
+                  )}
+                </select></div>
+              </div>
+
+              <div className="d-flex flex-direction-column">
+                <div className="font-size-label">Font size</div>
+                <div className="font-size mt-5"><select value={fontSize} onChange={fontSizeUpdate}>
+                  {fontSizeArray.map((item, i) =>
+                    <option key={i} value={item.value}>{item.fontSize}</option>
+                  )}
+
+                </select></div>
+              </div>
+            </div>
+            <div className="mt-auto textarea-block">
+              <div className={isEmojiActive ? 'd-flex emoji-block active' : 'd-flex emoji-block'}>
+                <div className="ml-auto emoji-toggle" onClick={emojiShowToggle}>😀</div>
+
+                <div className="emoji-picker">
+                  <Picker onEmojiClick={onEmojiClick} />
+                </div>
+
+              </div>
+              <div className="message-label">Message</div>
+              <textarea name="textarea" className="mt-5" placeholder="Type here" value={content} onChange={(e) => { contentChange(e.target) }}></textarea>
+              <p className="upload-image-block">Sign with an image (optional)
+              <label for="files" class="btn-upload">Upload</label>
+              <input id="files" style={{visibility:"hidden"}} type="file" onChange={(e) => { signChange(e)}}/> 
+              </p>
+            </div>
+            <div className="mt-auto block-recipient-price">
+              <div className="recipient-label">Wallet Address</div>
+              <div className="recipient-block mb-15 mt-5">
+                <input value={recipient || ''} onChange={updateRecipient} className="recipient-input" placeholder="Recipient Wallet Address" />
+              </div>
+              <div className="mt-auto d-flex align-items-center price-block">
+                <div className="price-label ml-auto">Price: 0.05 $SOL</div>
+                <button onClick={mint} className="btn-mint">MINT</button>
+              </div>
+            </div>
+          </div>
+        </main>
+        <footer className="d-flex align-items-center" style={{ backgroundImage: "url('footer-bg.png')" }}>
+          <a href="/" className="footer-logo">
             <img src={'./logo.png'} alt="Greetz" />
           </a>
-          <div className="ml-auto">
-            <WalletMultiButton/>
-          </div>
-        </div>
-      </header>
-      <main className="h-100 p-15 d-flex-tablet main">
-
-        <div className="d-flex flex-direction-column left-panel">
-          <div className="d-flex flex-wrap-wrap  frame-listing">
-            {
-              frameArray.map((item, index) => {
-                return (
-                  <div key={index} className="frame-listing-block" onClick={(e) => frameSet(e)}>
-                    { index === 0 ? (
-                      <div className="frame" style={{ backgroundImage: "none" }}>
-                      </div>
-                    ) : (
-                        <div className="frame" style={{ backgroundImage: "url(" + item.imagePath + ")" }}>
-                        </div>
-                      )}
-
-                  </div>
-                )
-              })
-            }
-          </div>
-        </div>
-        <div className="d-flex flex-direction-column middle-panel">
-          <div className="">
-          <div className="frame-block" id="capture" style={{ backgroundColor: bgColor }}>
-            <div className="frame-content">
-              <pre style={{ fontFamily: fontName, color: textColor, fontSize: fontSize }} className="pre-content">{content}</pre>
-              <div className="sign-content"></div>
-            </div>
-          </div>
-        </div>
-        </div>
-        <div className="d-flex flex-direction-column right-panel">
-          <div className="d-flex align-items-center color-picker-block">
-            <div className="d-flex flex-direction-column col-color col-background">
-              <div className="color background">Background</div>
-              <div className="color text  mt-5">
-                <ColorPicker
-                  animation="slide-up"
-                  color={bgColor}
-                  onChange={bgColorUpdate}
-                />
-              </div>
-            </div>
-            <div className="d-flex flex-direction-column col-color">
-              <div className="color background">Text</div>
-              <div className="color text  mt-5">
-                <ColorPicker
-                  animation="slide-up"
-                  color={textColor}
-                  onChange={textColorUpdate}
-                />
-              </div>
-            </div>
-          </div>
-          <div className="d-flex font-update-block mb-15">
-            <div className="d-flex flex-direction-column pr-15">
-              <div className="font-name-label">Font</div>
-              <div className="font-name mt-5"><select value={fontName} onChange={fontNameUpdate}>
-                {fontFamilyArray.map((item, i) =>
-                  <option key={i} value={item.value}>{item.fontFamily}</option>
-                )}
-              </select></div>
-            </div>
-
-            <div className="d-flex flex-direction-column">
-              <div className="font-size-label">Font size</div>
-              <div className="font-size mt-5"><select value={fontSize} onChange={fontSizeUpdate}>
-                {fontSizeArray.map((item, i) =>
-                  <option key={i} value={item.value}>{item.fontSize}</option>
-                )}
-
-              </select></div>
-            </div>
-          </div>
-          <div className="mt-auto textarea-block">
-            <div className={isEmojiActive ? 'd-flex emoji-block active' : 'd-flex emoji-block'}>
-              <div className="ml-auto emoji-toggle" onClick={emojiShowToggle}>😀</div>
-
-              <div className="emoji-picker">
-                <Picker onEmojiClick={onEmojiClick} />
-              </div>
-
-            </div>
-            <div className="message-label">Message</div>
-            <textarea name="textarea" className="mt-5" placeholder="Type here" value={content} onChange={(e) => { contentChange(e.target) }}></textarea>
-            <p className="upload-image-block">Sign with an image (optional)
-            <label for="files" class="btn-upload">Upload</label>
-            <input id="files" style={{visibility:"hidden"}} type="file" onChange={(e) => { signChange(e)}}/> 
-            </p>
-          </div>
-          <div className="mt-auto block-recipient-price">
-            <div className="recipient-label">Wallet Address</div>
-            <div className="recipient-block mb-15 mt-5">
-              <input value={recipient || ''} onChange={updateRecipient} className="recipient-input" placeholder="Recipient Wallet Address" />
-            </div>
-            <div className="mt-auto d-flex align-items-center price-block">
-              <div className="price-label ml-auto">Price: 0.05 $SOL</div>
-              <button onClick={mint} className="btn-mint">MINT</button>
-            </div>
-          </div>
-        </div>
-      </main>
-      <footer className="d-flex align-items-center" style={{ backgroundImage: "url('footer-bg.png')" }}>
-        <a href="/" className="footer-logo">
-          <img src={'./logo.png'} alt="Greetz" />
-        </a>
-        <a href="twitter.com/greetz_io" className="ico-twitter">
-          <img src={'twitter-logo.svg'} alt="Twitter" />
-        </a>
-      </footer>
+          <a href="https://twitter.com/greetz_io" target="_blank" className="ico-twitter">
+            <img src={'twitter-logo.svg'} alt="Twitter" />
+          </a>
+        </footer>
+      </div>
     </div>
   );
 }

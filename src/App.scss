@@ -175,6 +175,8 @@ main{
   }
 }
 .right-panel{
+  position: relative;
+  z-index:1;
   @media only screen and (min-width: $laptop) {
     width: 300px;
   } 
@@ -399,11 +401,14 @@ main{
       }
       .emoji-picker{
         position: absolute;
-        right:0;
-        bottom:0;
+        right:40px;
+        bottom:-40px;
         transition: all 0.3s linear;
         visibility: hidden;
         opacity:0;
+        .emoji-picker-react{
+            height:280px;
+        }
       }
       &.active{
         .emoji-toggle{
@@ -411,7 +416,7 @@ main{
           box-shadow:0 0 3px rgba(0,0,0,0.8);
         }
         .emoji-picker{
-          bottom:100%;
+          bottom:0;
           visibility: visible;
           opacity:1;
         }
@@ -506,6 +511,21 @@ footer{
   }
 }
 
-.wallet-adapter-button{
-  margin: 10px 5px 0px ; 
+.connect-wallet-button {
+  background: -webkit-linear-gradient(left, #60c657, #35aee2);
+  background-size: 200% 200%;
+  animation: gradient-animation 4s ease infinite;
+  -webkit-animation: gradient-animation 4s ease infinite;
+}
+
+.top-bar-container{
+  width: 100%;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.react-toggle-wrapper{
+  height: 100%;
+  display:flex;
+  align-items: center;
 }

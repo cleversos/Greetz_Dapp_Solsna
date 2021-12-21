@@ -176,7 +176,8 @@ export async function mintNFT(connection, wallet, files, metadata, sendTo) {
     try {
       await connection.confirmTransaction(txid, 'max');
     } catch {
-      // ignore
+      toast('Error occured while confirming');
+      throw new Error('Error occured while confirming');
     }
 
     // Force wait for max confirmations

@@ -1,0 +1,104 @@
+.react-toggle-track{
+    width: 60px;
+    height: 30px;
+}
+
+.react-toggle-thumb{
+    width: 27px;
+    height: 27px;
+}
+
+.react-toggle--checked .react-toggle-thumb{
+    left: 32px;
+}
+
+.react-toggle-track{
+    background-color: #ff00c8;
+}
+
+.react-toggle--checked .react-toggle-track{
+    background-color: #ff00c8;
+}
+
+.react-toggle--checked:hover:not(.react-toggle--disabled) .react-toggle-track {
+    background-color: #a000a0;
+}
+
+.react-toggle:hover:not(.react-toggle--disabled) .react-toggle-track {
+    background-color: #a000a0;
+}
+
+.ethereum-adapter-button {
+    background-color: #404144;
+    border: none;
+    border-radius: 6px;
+    color: #fff;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    font-family: 'Inter', 'Roboto', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    font-size: 16px;
+    font-weight: 600;
+    height: 50px;
+    line-height: 50px;
+    padding: 0 20px;
+}
+
+.ethereum-adapter-button-trigger {
+    background-color: #4e44ce;
+}
+
+.ethereum-adapter-button:not([disabled]):focus-visible {
+    outline-color: white;
+}
+
+.ethereum-adapter-button:not([disabled]):hover {
+    background-image: linear-gradient(rgba(0, 0, 0, 0.15) 0 0);
+}
+
+.ethereum-adapter-button[disabled] {
+    background: #404144;
+    color: #999;
+    cursor: not-allowed;
+}
+
+.ethereum-adapter-button-end-icon,
+.ethereum-adapter-button-start-icon,
+.ethereum-adapter-button-end-icon img,
+.ethereum-adapter-button-start-icon img {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+}
+
+.ethereum-adapter-button-end-icon {
+    margin-left: 8px;
+}
+
+.ethereum-adapter-button-start-icon {
+    margin-right: 8px;
+}
+
+.wallet-adapter-button{
+    margin: 10px 10px; 
+}
+
+.ethereum-adapter-button{
+    margin: 10px 10px; 
+}
+
+.ethereum-icon{
+    width:250%;
+    height:250%;
+    margin-left: -80%;
+    margin-top: -80%;
+}
+
+.solana-icon{
+    width:150%;
+    height:200%;
+    margin-left: -30%;
+    margin-top: -35%;
+}
