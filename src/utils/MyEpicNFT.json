@@ -1,4 +1,4 @@
-{
+  {
   "abi": [
     {
       "inputs": [],
@@ -204,11 +204,16 @@
           "internalType": "string",
           "name": "metadataURI",
           "type": "string"
+        },
+        {
+          "internalType": "address",
+          "name": "receiver",
+          "type": "address"
         }
       ],
       "name": "mint",
       "outputs": [],
-      "stateMutability": "nonpayable",
+      "stateMutability": "payable",
       "type": "function"
     },
     {
@@ -310,6 +315,19 @@
         }
       ],
       "name": "safeTransferFrom",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "add",
+          "type": "address"
+        }
+      ],
+      "name": "setAdmin",
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"

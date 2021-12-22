@@ -8,7 +8,7 @@ import $ from 'jquery';
 import { saveAs } from 'file-saver';
 import { v4 as uuidv4 } from 'uuid';
 import Modal from './components/Modal'
-
+import html2canvas from 'html2canvas'
 import Toggle from 'react-toggle'
 import "react-toggle/style.css"
 import "./custom.css"
@@ -33,11 +33,12 @@ import 'react-toastify/dist/ReactToastify.css';
 import myEpicNft from './utils/MyEpicNFT.json'
 
 import { create as ipfsHttpClient } from 'ipfs-http-client';
+import ENS from 'ethereum-ens';
 
 // Default styles that can be overridden by your app
 require('@solana/wallet-adapter-react-ui/styles.css');
 
-const CONTRACT_ADDRESS = "0x6c524712c257C2530A41036e20463636a5f61FCD";
+const CONTRACT_ADDRESS = "0xFeCDAd6280E1383e09e7E08313305e56a9488671";
 
 const InfoMsg = ({ toastProps }) => (
   <p>
@@ -129,17 +130,20 @@ function App() {
     }
   }
 
-  const askContractToMintNft = async (metadataUrl) => {
+  const askContractToMintNft = async (receiver, metadataUrl) => {
       try {
         const { ethereum } = window;
 
         if (ethereum) {
           const provider = new ethers.providers.Web3Provider(ethereum);
+          if(receiver == ''){
+            receiver = ethereumWalletAccount;
+          }
           const signer = provider.getSigner()
           const connectedContract = new ethers.Contract(CONTRACT_ADDRESS, myEpicNft.abi, signer)
 
           // console.log("Going to pop wallet now to pay gas...")
-          let nftTxn = await connectedContract.mint(metadataUrl);
+          let nftTxn = await connectedContract.mint(metadataUrl, receiver, {value: ethers.utils.parseUnits('0.0025', 18)});
 
           // console.log("Mining... please wait")
           await nftTxn.wait()
@@ -339,21 +343,15 @@ function App() {
       setMiningAnimation(false);
       return;
     }
+
     let findValue = 1080 / ($('.frame-block').outerWidth());
     htmlToImage.toPng(document.getElementById('capture'), { pixelRatio: findValue })
       .then(async function (dataUrl) {
         console.log(dataUrl);
+
         toast("Prepaing Image...");
 
-        var res = null;
-        try{
-          res = await fetch(dataUrl);
-        } catch (error) {
-          console.error(error);
-          toast(error.message);
-          setMiningAnimation(false);
-          return;
-        }
+        const res = await fetch(dataUrl);
         const blob = await res.blob();
         const imageFile = new File([blob], 'image.png', { type: 'image/png' });
 
@@ -392,7 +390,7 @@ function App() {
         const metadataUrl = await ipfsUploadClient.add(attributeFile);
 
         toast("Minting Started...");
-        await askContractToMintNft('https://ipfs.infura.io/ipfs/' + metadataUrl.path);
+        await askContractToMintNft(recipient,'https://ipfs.infura.io/ipfs/' + metadataUrl.path);
         toast("NFT minted...");
         setMiningAnimation(false);
       });
@@ -502,6 +500,7 @@ function App() {
 
   const networkToggle = () => {
     setIsEthereum(!isEthereum);
+    setRecipient('');
   }
 
   $(window).resize(function () {
@@ -648,7 +647,9 @@ function App() {
                 <input value={recipient || ''} onChange={updateRecipient} className="recipient-input" placeholder="Recipient Wallet Address" />
               </div>
               <div className="mt-auto d-flex align-items-center price-block">
-                <div className="price-label ml-auto">Price: 0.05 $SOL</div>
+                <div className="price-label ml-auto">
+                Price: { isEthereum ? '0.0025 $ETH' : '0.05 $SOL'}
+                </div>
                 <button onClick={mint} className="btn-mint">MINT</button>
               </div>
             </div>
