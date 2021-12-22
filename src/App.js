@@ -1,21 +1,18 @@
-import React, { useState, useEffect, useMemo, useCallback } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { ethers } from 'ethers'
 import 'rc-color-picker/assets/index.css';
 import ColorPicker from 'rc-color-picker';
 import Picker from 'emoji-picker-react';
 import './App.scss';
 import $ from 'jquery';
-import { saveAs } from 'file-saver';
 import { v4 as uuidv4 } from 'uuid';
 import Modal from './components/Modal'
-import html2canvas from 'html2canvas'
 import Toggle from 'react-toggle'
 import "react-toggle/style.css"
 import "./custom.css"
 
 /* ES6 */
 import * as htmlToImage from 'html-to-image';
-import { toPng, toJpeg, toBlob, toPixelData, toSvg } from 'html-to-image';
 import AWS from 'aws-sdk';
 
 import { useConnection, useWallet } from '@solana/wallet-adapter-react';
@@ -38,7 +35,7 @@ import ENS from 'ethereum-ens';
 // Default styles that can be overridden by your app
 require('@solana/wallet-adapter-react-ui/styles.css');
 
-const CONTRACT_ADDRESS = "0xFeCDAd6280E1383e09e7E08313305e56a9488671";
+const CONTRACT_ADDRESS = "0x565aAA301181d215c90f70d8A9F56fEC6160A9d4";
 
 const InfoMsg = ({ toastProps }) => (
   <p>

@@ -1,0 +1,47 @@
+image: docker:latest
+
+stages:
+  - build
+  - deploy
+
+build:
+  stage: build
+  image: node:12
+  cache:
+    paths:
+      - node_modules/
+
+  script:
+      - npm install
+      - npm run build
+      - echo "BUILD SUCCESSFULLY"
+  artifacts:
+    paths:
+      - ./build
+    expire_in: 15 mins
+  environment:
+    name: production
+  only:
+    - main
+
+deploy:
+  stage: deploy
+  image: python:latest
+  dependencies:
+    - build
+  
+  
+  script:
+    - export AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID    
+    - export AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY
+    - export S3_BUCKET_NAME=$S3_BUCKET_NAME
+    - export DISTRIBUTION_ID=$DISTRIBUTION_ID
+    - pip install awscli --upgrade --user
+    - export PATH=~/.local/bin:$PATH
+    - aws s3 sync ./build/ s3://greetz-react-app --delete
+    - aws cloudfront create-invalidation --distribution-id $DISTRIBUTION_ID --paths '/*'
+    - echo "DEPLOYED SUCCESSFULLY"
+  environment:
+    name: production
+  only:
+    - main
