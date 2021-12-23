@@ -454,7 +454,10 @@ function App() {
               value: uuidv4(),
             },
           ],
-          collection: null,
+          collection: {
+            "name" : "Greetz",
+            "family" : "Greetz"
+          },
           properties: {
             category: 'image',
             files: [{ type: imageFile.type, uri: imageFile.name }],
