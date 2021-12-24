@@ -399,6 +399,7 @@ function App() {
       toast.warn("Please connect your wallet!",{
         autoClose: 10000,
       });
+      setMiningAnimation(false);
       return;
     }
     // toast.info(<InfoMsg/>,{
