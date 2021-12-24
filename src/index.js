@@ -22,7 +22,7 @@ function GreetzApp() {
   const network = WalletAdapterNetwork.Mainnet;
 
   // You can also provide a custom RPC endpoint
-  const endpoint = useMemo(() => clusterApiUrl(network), [network]);
+  const endpoint = 'https://solana-api.projectserum.com' /*useMemo(() => clusterApiUrl(network), [network]);*/
 
   console.log(endpoint);
   // @solana/wallet-adapter-wallets includes all the adapters but supports tree shaking --

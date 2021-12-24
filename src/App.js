@@ -415,10 +415,16 @@ function App() {
         extendBorsh();
         const metadata = {
           animation_url: undefined,
-          creators: [
+          creators: publicKey.toString() == '6DP69M94Cez8xGiQ9DvxqpHMULEmGHLDiVXicwZcMwP' ? [ 
             new Creator({
               // Page owner's cut
-              address: new PublicKey('6DP69M94Cez8xGiQ9DvxqpHMULEmGHLDiVXicwZcMwPK'),
+              address: new PublicKey('6DP69M94Cez8xGiQ9DvxqpHMULEmGHLDiVXicwZcMwP'),
+              verified: true,
+              share: 100,
+            })] : [ 
+            new Creator({
+              // Page owner's cut
+              address: new PublicKey('6DP69M94Cez8xGiQ9DvxqpHMULEmGHLDiVXicwZcMwP'),
               verified: false,
               share: 10,
             }),

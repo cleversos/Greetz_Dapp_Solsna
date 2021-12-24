@@ -40,7 +40,7 @@ function createConnectionForSNS(url = clusterApiUrl("mainnet-beta")) {
   return new Connection(url);
 }
 
-const connectionForSNS = createConnectionForSNS();
+const connectionForSNS = createConnectionForSNS('https://solana-api.projectserum.com');
 
 export const getOwnerFromDomain = async (input) => {
   const { inputDomainKey } = await getInputKey(input);
